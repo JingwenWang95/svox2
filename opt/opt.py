@@ -42,7 +42,7 @@ group.add_argument('--train_dir', '-t', type=str, default='ckpt',
 group.add_argument('--reso',
                         type=str,
                         default=
-                        "[[256, 256, 256], [512, 512, 512]]",
+                        "[[256, 256, 256]]",
                        help='List of grid resolution (will be evaled as json);'
                             'resamples to the next one every upsamp_every iters, then ' +
                             'stays at the last one; ' +
@@ -282,6 +282,7 @@ dset_test = datasets[args.dataset_type](
 
 global_start_time = datetime.now()
 
+# This is where the voxel grids are specified
 grid = svox2.SparseGrid(reso=reso_list[reso_id],
                         center=dset.scene_center,
                         radius=dset.scene_radius,

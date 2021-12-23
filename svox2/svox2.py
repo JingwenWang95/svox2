@@ -168,12 +168,12 @@ class Camera:
         yy = (yy - self.cy_val) / self.fy_val
         zz = torch.ones_like(xx)
         dirs = torch.stack((xx, yy, zz), dim=-1)   # OpenCV
-        del xx, yy, zz
+        del xx, yy, zz  # why delete?
         dirs /= torch.norm(dirs, dim=-1, keepdim=True)
-        dirs = dirs.reshape(-1, 3, 1)
+        dirs = dirs.reshape(-1, 3, 1)  # [H*W, 3, 1]
         dirs = (self.c2w[None, :3, :3].double() @ dirs)[..., 0]
         dirs = dirs.reshape(-1, 3).float()
-
+        # For SLAM, we don't need NDC coordinate
         if self.ndc_coeffs[0] > 0.0:
             origins, dirs = utils.convert_to_ndc(
                     origins,
@@ -1033,6 +1033,7 @@ class SparseGrid(nn.Module):
             )
         return out_rgb
 
+    # TODO: how to get colors more flexible? like when coloring the mesh we need per-point color
     def volume_render(
         self, rays: Rays, use_kernel: bool = True, randomize: bool = False,
         return_raylen: bool=False
@@ -1178,6 +1179,7 @@ class SparseGrid(nn.Module):
             all_rgb_out = torch.cat(all_rgb_out, dim=0)
             return all_rgb_out.view(camera.height, camera.width, -1)
 
+    # TODO: no gradients flowing back...
     def volume_render_depth(self, rays: Rays, sigma_thresh: Optional[float] = None):
         """
         Volumetric depth rendering for rays

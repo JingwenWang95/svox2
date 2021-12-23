@@ -169,6 +169,7 @@ with torch.no_grad():
     #  grid.links[:, :, LAYER+1:] = -1
 
     frames = []
+    depth_frames = []
     #  im_gt_all = dset.gt.to(device=device)
 
     for img_id in tqdm(range(0, n_images, img_eval_interval)):
@@ -185,6 +186,11 @@ with torch.no_grad():
                            w, h,
                            ndc_coeffs=dset.ndc_coeffs)
         im = grid.volume_render_image(cam, use_kernel=True, return_raylen=args.ray_len)
+
+        depth_im = grid.volume_render_depth_image(cam).cpu().numpy()
+        depth_frames += [depth_im]
+        imageio.imwrite(path.join(render_dir, f'{img_id:04d}-depth.png'), depth_im)
+
         if args.ray_len:
             minv, meanv, maxv = im.min().item(), im.mean().item(), im.max().item()
             im = viridis_cmap(im.cpu().numpy())
@@ -209,7 +215,7 @@ with torch.no_grad():
                     print(img_id, 'PSNR', psnr, 'SSIM', ssim, 'LPIPS', lpips_i)
                 else:
                     print(img_id, 'PSNR', psnr, 'SSIM', ssim)
-        img_path = path.join(render_dir, f'{img_id:04d}.png');
+        img_path = path.join(render_dir, f'{img_id:04d}.png')
         im = im.cpu().numpy()
         if not args.render_path:
             im_gt = dset.gt[img_id].numpy()
@@ -239,6 +245,8 @@ with torch.no_grad():
                 print('LPIPS:', avg_lpips)
                 with open(path.join(render_dir, 'lpips.txt'), 'w') as f:
                     f.write(str(avg_lpips))
+
+    imageio.mimwrite(path.join(render_dir, "depth.mp4"), depth_frames, fps=args.fps, macro_block_size=8)
     if not args.no_vid and len(frames):
         vid_path = render_dir + '.mp4'
         imageio.mimwrite(vid_path, frames, fps=args.fps, macro_block_size=8)  # pip install imageio-ffmpeg

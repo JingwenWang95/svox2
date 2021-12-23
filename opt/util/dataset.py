@@ -1,8 +1,10 @@
 from .nerf_dataset import NeRFDataset
+from .tum_dataset import TUMDataset
 from .llff_dataset import LLFFDataset
 from .nsvf_dataset import NSVFDataset
 from .co3d_dataset import CO3DDataset
 from os import path
+
 
 def auto_dataset(root : str, *args, **kwargs):
     if path.isfile(path.join(root, 'apple', 'eval_batches_multisequence.json')):
@@ -15,12 +17,17 @@ def auto_dataset(root : str, *args, **kwargs):
          path.isfile(path.join(root, 'transforms_train.json')):
         print("Detected NeRF (Blender) dataset")
         return NeRFDataset(root, *args, **kwargs)
+    elif path.isfile(path.join(root, "processed/cameras.npz")):
+        print("Detected TUM dataset")
+        return TUMDataset(root, *args, **kwargs)
     else:
         print("Defaulting to extended NSVF dataset")
         return NSVFDataset(root, *args, **kwargs)
 
+
 datasets = {
     'nerf': NeRFDataset,
+    'tum': TUMDataset,
     'llff': LLFFDataset,
     'nsvf': NSVFDataset,
     'co3d': CO3DDataset,
